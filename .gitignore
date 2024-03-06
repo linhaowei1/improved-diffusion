@@ -1,3 +1,10 @@
 .DS_Store
 __pycache__/
 
+cifar_train
+cifar_test
+mnist_train
+mnist_test
+improved_diffusion.egg-info
+mnist/
+results/

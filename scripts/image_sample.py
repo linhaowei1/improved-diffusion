@@ -5,10 +5,12 @@ numpy array. This can be used to produce samples for FID evaluation.
 
 import argparse
 import os
-
+import math
 import numpy as np
 import torch as th
 import torch.distributed as dist
+import matplotlib.pyplot as plt
+from PIL import Image
 
 from improved_diffusion import dist_util, logger
 from improved_diffusion.script_util import (
@@ -24,7 +26,7 @@ def main():
     args = create_argparser().parse_args()
 
     dist_util.setup_dist()
-    logger.configure()
+    logger.configure(dir=args.log_dir)
 
     logger.log("creating model and diffusion...")
     model, diffusion = create_model_and_diffusion(
@@ -83,10 +85,29 @@ def main():
             np.savez(out_path, arr, label_arr)
         else:
             np.savez(out_path, arr)
+            save_images(arr, out_path.replace('.npz', '.png'))
 
     dist.barrier()
     logger.log("sampling complete")
 
+def save_images(images: np.ndarray, 
+                path_name: str, 
+                labels=None,
+                dpi: int=300,
+                ):
+    images = [Image.fromarray(image) for image in images]
+    images = images[:min(64, len(images))]
+    length = math.ceil(math.sqrt(len(images)))
+    fig, axs = plt.subplots(length, length, figsize=(16, 16))
+    for i in range(length):
+        for j in range(length):
+            if i*length+j >= len(images):
+                continue
+            axs[i, j].imshow(images[i*length+j])
+            if labels is not None:
+                axs[i, j].set_title(int(labels[i*length+j].item()))
+            axs[i, j].set_axis_off()
+    fig.savefig(path_name, dpi=dpi, bbox_inches='tight')
 
 def create_argparser():
     defaults = dict(

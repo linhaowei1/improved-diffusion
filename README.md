@@ -2,6 +2,24 @@
 
 This is the codebase for [Improved Denoising Diffusion Probabilistic Models](https://arxiv.org/abs/2102.09672).
 
+# 使用方法
+1. （安装）pip install -e .（可能还有一些分布式训练需要装的，直接pip install就好）
+2. （optional，训练数据）进入datasets文件夹，python cifar10.py (或者mnist.py);
+3. （训练）
+
+```
+MODEL_FLAGS="--image_size 32 --num_channels 128 --num_res_blocks 3"
+DIFFUSION_FLAGS="--diffusion_steps 1000 --noise_schedule linear"
+TRAIN_FLAGS="--lr 1e-4 --batch_size 128 --log_dir tmp"
+
+python scripts/image_train.py --data_dir path/to/images $MODEL_FLAGS $DIFFUSION_FLAGS $TRAIN_FLAGS
+```
+
+4. （sampling）可以使用存下来的ema模型（参考下面的section）
+
+python scripts/image_sample.py --model_path /path/to/model.pt $MODEL_FLAGS $DIFFUSION_FLAGS --timestep_respacing 50 --use_ddim True
+
+
 # Usage
 
 This section of the README walks through how to train and sample from a model.
@@ -29,7 +47,7 @@ The images will automatically be scaled and center-cropped by the data-loading p
 To train your model, you should first decide some hyperparameters. We will split up our hyperparameters into three groups: model architecture, diffusion process, and training flags. Here are some reasonable defaults for a baseline:
 
 ```
-MODEL_FLAGS="--image_size 64 --num_channels 128 --num_res_blocks 3"
+MODEL_FLAGS="--image_size 32 --num_channels 128 --num_res_blocks 3"
 DIFFUSION_FLAGS="--diffusion_steps 4000 --noise_schedule linear"
 TRAIN_FLAGS="--lr 1e-4 --batch_size 128"
 ```
